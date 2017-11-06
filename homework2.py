@@ -8,7 +8,7 @@ Created on Mon Oct 30 16:11:32 2017
 import numpy as np 
 import matplotlib.pyplot as plt 
 import h5py 
-import scipy 
+import scipy
 #import Image
 from scipy import ndimage 
 from lr_utils import load_dataset 
@@ -126,20 +126,71 @@ def model (X_train, Y_train, X_test, Y_test, num_iterations, learning_rate, prin
 #####################################
 #RUNNING CODE HERE
     
-train_set_x_orig, train_set_y, test_set_x_orig, test_set_y, classes = load_dataset()
+def main():
+    train_set_x_orig, train_set_y, test_set_x_orig, test_set_y, classes = load_dataset()
+
+    m_train = train_set_x_orig.shape[0] 
+    m_test = test_set_x_orig.shape[0] 
+    num_px = train_set_x_orig.shape[1]
 
 
-m_train = train_set_x_orig.shape[0] 
-m_test = test_set_x_orig.shape[0] 
-num_px = train_set_x_orig.shape[1]
+    train_set_x_flatten = train_set_x_orig.reshape(train_set_x_orig.shape[0], -1).T 
+    test_set_x_flatten = test_set_x_orig.reshape(test_set_x_orig.shape[0], -1).T 
+
+    
+    train_set_x = train_set_x_flatten/255 
+    test_set_x = test_set_x_flatten/255
 
 
-train_set_x_flatten = train_set_x_orig.reshape(train_set_x_orig.shape[0], -1).T 
-test_set_x_flatten = test_set_x_orig.reshape(test_set_x_orig.shape[0], -1).T 
+    #
+    learning_rates=[0.00002, 0.0002, 0.002]
+    models={}
+
+    my_image = "cat1.jpg"
+    fname = "images/" + my_image
+    image = np.array(ndimage.imread(fname, flatten=False)) 
+    print (image.shape[0])
+    #plt.imshow(image) 
+    
+    for i in learning_rates:
+        print("learning rate is: "+ str(i))
+        d = model(train_set_x, train_set_y, test_set_x, test_set_y, num_iterations = 5000, learning_rate = i, print_cost = False)    
+        models[str(i)]=d
+        my_image = scipy.misc.imresize(image, size=(num_px,num_px)).reshape((1, num_px*num_px*3)).T 
+        my_predicted_image = predict(d["w"], d["b"], my_image) 
+        print("y = " + str(np.squeeze(my_predicted_image)) + ", your model predicts a \"" + classes[int(np.squeeze(my_predicted_image)),].decode("utf-8") +  "\" picture.")
+        print ('\n' + "-------------------------------------------------------" + '\ n')
+
+    for i in learning_rates:
+        plt.plot(np.squeeze(models[str(i)]["costs"]), label= str(models[str(i)]["learning_rate"])) 
+
+    plt.ylabel('Cost')
+    plt.xlabel('iterations')
+
+    legend = plt.legend(loc='upper center', shadow=True) 
+    frame = legend.get_frame() 
+    frame.set_facecolor('0.90') 
+    plt.show()
+    #d = model(train_set_x, train_set_y, test_set_x, test_set_y, num_iterations = 5000, learning_rate = 0.00002, print_cost = False)    
 
 
-train_set_x = train_set_x_flatten/255 
-test_set_x = test_set_x_flatten/255
+    ## START CODE HERE ## (PUT YOUR IMAGE NAME) 
+    
+    #my_image = "cat1.jpg"   # change this to the name of your image file #
+    # END CODE HERE ## 
+    # We preprocess the image to fit your algorithm. 
+    
+    
+    '''for d in models:
+        fname = "images/" + my_image
+        image = np.array(ndimage.imread(fname, flatten=False)) 
+        print (image.shape[0])
+        my_image = scipy.misc.imresize(image, size=(num_px,num_px)).reshape((1, num_px*num_px*3)).T 
+        my_predicted_image = predict(d["w"], d["b"], my_image) 
+        plt.imshow(image) 
+        print("y = " + str(np.squeeze(my_predicted_image)) + ", your model predicts a \"" + classes[int(np.squeeze(my_predicted_image)),].decode("utf-8") +  "\" picture.")
+    '''
 
-d = model(train_set_x, train_set_y, test_set_x, test_set_y, num_iterations = 5000, learning_rate = 0.00002, print_cost = True)    
+if __name__ == '__main__':
+    main()    
     
